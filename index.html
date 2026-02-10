@@ -6,7 +6,6 @@
   <title>Свадбена Покана</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
-
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet">
 
   <style>
@@ -15,9 +14,7 @@
       background: linear-gradient(180deg, #fdf8f0, #f5ebe0);
     }
 
-    .font-elegant {
-      font-family: "Cormorant Garamond", serif;
-    }
+    .font-elegant { font-family: "Cormorant Garamond", serif; }
 
     .form-input {
       width: 100%;
@@ -43,14 +40,9 @@
       cursor: pointer;
     }
 
-    .submit-btn:hover {
-      background: #c9956c;
-    }
+    .submit-btn:hover { background: #c9956c; }
 
-    input[type="radio"] {
-      accent-color: #5a4a3a;
-      transform: scale(1.2);
-    }
+    input[type="radio"] { accent-color: #5a4a3a; transform: scale(1.2); }
   </style>
 </head>
 
@@ -71,9 +63,7 @@
     <div class="text-center mb-8">
       <p class="font-elegant text-2xl text-[#000000]">датум и час</p>
       <p class="font-elegant text-2xl text-[#5a4a3a]">23.08.2026</p>
-      <p class="font-elegant text-2xl text-[#8b7355]">
-        прием од 18:30 - 19:00 часот
-      </p>
+      <p class="font-elegant text-2xl text-[#8b7355]">прием од 18:30 - 19:00 часот</p>
 
       <p class="font-elegant text-2xl text-[#000000] mt-4">локација</p>
       <p class="mt-2 text-[#8b7355]">Villa Ina, Скопје</p><br>
@@ -115,17 +105,12 @@
           <span>Не, нема да присуствувам</span>
         </label>
       </div>
-<br>      
+<br>
       <!-- GUESTS -->
       <div id="guestsDiv">
-        <p class="font-elegant text-2xl text-[#5a4a3a]">
-          Број на гости од вашето семејство
-        </p>
-        <p class="font-elegant text-[1.35rem] text-[#8b7355]" style="margin-top: -1%;">
-          Вклучувајќи ве и вас
-        </p>
-
-        <input class="form-input" id="guests" type="number" min="1" required>
+        <p class="font-elegant text-2xl text-[#5a4a3a]">Број на гости од вашето семејство</p>
+        <p class="font-elegant text-[1.35rem] text-[#8b7355]" style="margin-top: -1%;">Вклучувајќи ве и вас</p>
+        <input class="form-input" id="guests" type="number" min="1" required value="1">
       </div>
 <br><br>
       <!-- MENU -->
@@ -147,20 +132,14 @@
       </label>
 <br>
       <!-- MESSAGE -->
-      <p class="font-elegant text-2xl text-[#5a4a3a]">
-        Порака за младенците (опционално)
-      </p>
-
+      <p class="font-elegant text-2xl text-[#5a4a3a]">Порака за младенците (опционално)</p>
       <p class="font-elegant text-[1.35rem] text-[#8b7355]" style="margin-top: -1%;">
         Доколку сакате да ни оставите порака или да не прашате нешто.
       </p>
-
       <textarea class="form-input" id="message"></textarea>
 <br>
       <!-- SUBMIT -->
-      <button class="submit-btn" type="submit">
-        Испрати одговор
-      </button>
+      <button class="submit-btn" type="submit">Испрати одговор</button>
 
     </form>
 
@@ -188,9 +167,10 @@
     const form = document.getElementById("rsvpForm");
     const statusMsg = document.getElementById("statusMsg");
 
-    // Disable guests input if not attending
+    // Disable guests and menu input if not attending
     const attendingRadios = document.querySelectorAll('input[name="attending"]');
     const guestsInput = document.getElementById("guests");
+    const menuRadios = document.querySelectorAll('input[name="menu"]');
 
     attendingRadios.forEach(radio => {
       radio.addEventListener("change", () => {
@@ -198,10 +178,21 @@
           guestsInput.value = 0;
           guestsInput.disabled = true;
           guestsInput.required = false;
+
+          menuRadios.forEach(menu => {
+            menu.checked = false;
+            menu.disabled = true;
+            menu.required = false;
+          });
         } else if (radio.value === "yes" && radio.checked) {
           guestsInput.disabled = false;
           guestsInput.required = true;
           guestsInput.value = 1;
+
+          menuRadios.forEach(menu => {
+            menu.disabled = false;
+            menu.required = true;
+          });
         }
       });
     });
@@ -210,18 +201,18 @@
       e.preventDefault();
 
       try {
-        const attendingValue =
-          document.querySelector('input[name="attending"]:checked').value;
+        const attendingValue = document.querySelector('input[name="attending"]:checked').value;
 
-        const menuValue =
-          document.querySelector('input[name="menu"]:checked').value;
+        // Menu value with "-" as fallback
+        const menuChecked = document.querySelector('input[name="menu"]:checked');
+        const menuValue = menuChecked ? menuChecked.value : "-";
 
         await addDoc(collection(db, "rsvp"), {
           name: document.getElementById("name").value,
           email: document.getElementById("email").value,
           attending: attendingValue,
           guests: attendingValue === "yes" ? Number(guestsInput.value) : 0,
-          menu: menuValue,
+          menu: attendingValue === "yes" ? menuValue : "-",
           message: document.getElementById("message").value,
           createdAt: serverTimestamp()
         });
@@ -233,6 +224,13 @@
         guestsInput.disabled = false;
         guestsInput.required = true;
         guestsInput.value = 1;
+
+        // Reset menu radios
+        menuRadios.forEach(menu => {
+          menu.disabled = false;
+          menu.checked = false;
+          menu.required = true;
+        });
 
       } catch (err) {
         console.error(err);
